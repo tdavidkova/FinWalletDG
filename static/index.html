@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinWallet DG</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">&#x1F4B0; FinWallet DG</div>
+                <button class="sidebar-close" id="sidebar-close">&times;</button>
+            </div>
+            <div class="group-selector">
+                <label>Група</label>
+                <select id="group-select">
+                    <option value="">-- Изберете група --</option>
+                </select>
+                <button class="btn btn-sm btn-outline" id="btn-new-group" title="Нова група">+ Нова</button>
+            </div>
+            <ul class="nav-links" id="nav-links">
+                <li data-view="dashboard" class="active">
+                    <span class="nav-icon">&#x1F4CA;</span> Табло
+                </li>
+                <li data-view="students">
+                    <span class="nav-icon">&#x1F466;</span> Деца
+                </li>
+                <li data-view="transactions">
+                    <span class="nav-icon">&#x1F4DD;</span> Движения
+                </li>
+                <li data-view="invoices">
+                    <span class="nav-icon">&#x1F9FE;</span> Фактури
+                </li>
+                <li data-view="settings">
+                    <span class="nav-icon">&#x2699;</span> Настройки
+                </li>
+            </ul>
+        </nav>
+        <main class="main">
+            <header class="topbar">
+                <button class="hamburger" id="hamburger">&#9776;</button>
+                <h2 id="page-title">Табло</h2>
+            </header>
+            <div class="content" id="content">
+                <div class="empty-state">
+                    <p>Изберете или създайте група, за да започнете.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal overlay -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
