@@ -16,6 +16,8 @@ from app.backup import save_backup
 
 import os
 import logging
+import asyncio
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,37 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="FinWallet DG")
+
+
+# ===================== SELF-PING (keep Render alive) =====================
+
+SELF_PING_URL = os.environ.get("RENDER_EXTERNAL_URL")  # set automatically by Render
+SELF_PING_INTERVAL = int(os.environ.get("SELF_PING_INTERVAL", "600"))  # 10 min
+
+
+async def _self_ping():
+    """Ping ourselves every 10 minutes to prevent Render free tier spin-down."""
+    if not SELF_PING_URL:
+        return  # not on Render, skip
+    await asyncio.sleep(30)  # wait for startup
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                await client.get(f"{SELF_PING_URL}/api/health", timeout=10)
+                logger.info("Self-ping OK")
+            except Exception as e:
+                logger.warning("Self-ping failed: %s", e)
+            await asyncio.sleep(SELF_PING_INTERVAL)
+
+
+@app.on_event("startup")
+async def start_self_ping():
+    asyncio.create_task(_self_ping())
+
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok"}
 
 
 class BackupMiddleware(BaseHTTPMiddleware):
