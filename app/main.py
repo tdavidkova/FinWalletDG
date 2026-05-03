@@ -456,16 +456,42 @@ def create_expense(group_id: str, data: schemas.ExpenseCreate, db: Session = Dep
 
 @app.get("/api/groups/{group_id}/balances")
 def get_balances(group_id: str, db: Session = Depends(get_db)):
+    # Fetch all students for the group
     students = (
         db.query(Student)
         .filter(Student.group_id == group_id)
         .order_by(Student.status, Student.display_number.nullsfirst(), Student.full_name)
         .all()
     )
+
+    # Pre-calculate all balances in a single query to avoid lazy loading issues
+    balance_map = {}
+    if students:
+        student_ids = [s.id for s in students]
+        balances = db.query(
+            Transaction.student_id,
+            func.coalesce(func.sum(Transaction.amount_bgn), 0),
+            func.coalesce(func.sum(Transaction.amount_eur), 0),
+        ).filter(Transaction.student_id.in_(student_ids)).group_by(Transaction.student_id).all()
+
+        for student_id, bgn, eur in balances:
+            balance_map[student_id] = (round(bgn, 2), round(eur, 2))
+
     active = []
     unenrolled = []
     for s in students:
-        out = _student_out(db, s)
+        bal_bgn, bal_eur = balance_map.get(s.id, (0.0, 0.0))
+        out = schemas.StudentOut(
+            id=s.id,
+            group_id=s.group_id,
+            full_name=s.full_name,
+            display_number=s.display_number,
+            status=s.status,
+            unenrolled_at=s.unenrolled_at,
+            sibling_group_id=s.sibling_group_id,
+            balance_bgn=bal_bgn,
+            balance_eur=bal_eur,
+        )
         if s.status == "active":
             active.append(out)
         else:
